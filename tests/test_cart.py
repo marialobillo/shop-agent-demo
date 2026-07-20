@@ -26,4 +26,12 @@ def test_add_same_product_twice_should_increase_quantity():
     cart.add(new_product)
     
     assert cart.total == 6000
+
+def test_remove_a_product_from_cart():
+    cart = Cart()
+    new_product = Product("product_id", "pair of jeans", 3000)
+    cart.add(new_product)
+    cart.remove(new_product)
     
+    assert cart.total == 0
+    assert cart.lines == {}

@@ -1,4 +1,6 @@
 
+from http.client import HTTPException
+
 from tienda.domain.cartline import CartLine
 from tienda.domain.product import Product
 
@@ -19,3 +21,11 @@ class Cart:
             line = CartLine(product, 1)   
             self.lines[product.product_id] = line
         
+    def remove(self,product: Product):
+        if product.product_id in self.lines:
+            if self.lines[product.product_id].quantity > 1:
+                self.lines[product.product_id].quantity -= 1
+            else:
+                del self.lines[product.product_id]
+        else:
+            raise HTTPException(f"Product not found")
