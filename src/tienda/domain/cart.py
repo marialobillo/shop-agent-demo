@@ -2,6 +2,7 @@
 from http.client import HTTPException
 
 from tienda.domain.cartline import CartLine
+from tienda.domain.exceptions import ProductNotFound
 from tienda.domain.product import Product
 
 
@@ -28,4 +29,4 @@ class Cart:
             else:
                 del self.lines[product.product_id]
         else:
-            raise HTTPException(f"Product not found")
+            raise ProductNotFound(product.product_id)
