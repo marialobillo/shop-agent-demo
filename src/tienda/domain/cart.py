@@ -1,6 +1,3 @@
-
-from http.client import HTTPException
-
 from tienda.domain.cartline import CartLine
 from tienda.domain.exceptions import ProductNotFound
 from tienda.domain.product import Product
