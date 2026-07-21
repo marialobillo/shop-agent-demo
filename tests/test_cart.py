@@ -60,14 +60,14 @@ def test_remove_from_quantity_two_to_one():
     assert cart.total == 3000
     assert cart.lines["product_id"].quantity == 1
 
-# def test_remove_all_items_from_cart():
-#     cart = Cart()
-#     new_product = Product("product_id", "pair of jeans", 3000)
-#     second_product = Product("product_2id", "red t-shirt", 2000)
+def test_remove_all_items_from_cart():
+    cart = Cart()
+    new_product = Product("product_id", "pair of jeans", 3000)
+    second_product = Product("product_2id", "red t-shirt", 2000)
 
-#     cart.add(new_product)
-#     cart.add(second_product)
-#     cart.clear()
+    cart.add(new_product)
+    cart.add(second_product)
+    cart.clear()
 
-#     assert cart.total == 0
-#     assert cart.lines == {}
+    assert cart.total == 0
+    assert cart.lines == {}

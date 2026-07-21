@@ -30,3 +30,6 @@ class Cart:
                 del self.lines[product.product_id]
         else:
             raise ProductNotFound(product.product_id)
+        
+    def clear(self):
+        ...
