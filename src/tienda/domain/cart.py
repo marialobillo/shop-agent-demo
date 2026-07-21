@@ -20,13 +20,13 @@ class Cart:
             self.lines[product.product_id] = line
         
     def remove(self,product: Product):
-        if product.product_id in self.lines:
-            if self.lines[product.product_id].quantity > 1:
-                self.lines[product.product_id].quantity -= 1
-            else:
-                del self.lines[product.product_id]
-        else:
+        if product.product_id not in self.lines:    
             raise ProductNotFound(product.product_id)
+        line = self.lines[product.product_id]
+        if line.quantity > 1:
+            line.quantity -= 1
+        else:
+            del self.lines[product.product_id]
         
     def clear(self):
         self.lines.clear()
