@@ -32,4 +32,4 @@ class Cart:
             raise ProductNotFound(product.product_id)
         
     def clear(self):
-        ...
+        self.lines = {}
