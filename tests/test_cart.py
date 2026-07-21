@@ -71,3 +71,14 @@ def test_remove_all_items_from_cart():
 
     assert cart.total == 0
     assert cart.lines == {}
+
+def test_add_two_diff_products():
+    cart = Cart()
+    product_a = Product("product_id", "pair of jeans", 3000)
+    product_b = Product("product_2id", "red t-shirt", 2000)
+
+    cart.add(product_a)
+    cart.add(product_b)
+
+    assert cart.total == 5000
+    assert len(cart.lines) == 2
