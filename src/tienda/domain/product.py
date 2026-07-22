@@ -6,3 +6,7 @@ class Product:
     name: str
     price: int
 
+    def __post_init__(self):
+        if self.price < 0:
+            raise ValueError(f"Product Price must be zero o higher, got {self.price}")
+
