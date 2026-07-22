@@ -7,7 +7,6 @@ class Cart:
     def __init__(self):
         self.lines = {}
 
-
     @property
     def total(self) -> int:
         return sum(line.subtotal for line in self.lines.values())
