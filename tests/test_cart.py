@@ -1,13 +1,15 @@
 
+from fastapi.testclient import TestClient
 import pytest
 
 from tienda.domain.cart import Cart
 from tienda.domain.exceptions import ProductNotFound
 from tienda.domain.product import Product
+from tienda.api.main import app, cart
+
+client = TestClient(app)
 
 def test_new_cart_is_total_zero():
-    cart = Cart()
-
     assert cart.total == 0
 
 
