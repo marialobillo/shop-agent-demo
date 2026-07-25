@@ -7,7 +7,7 @@ client = TestClient(app)
 def test_get_empty_cart():
     response = client.get("/cart")
     assert response.status_code == 200
-    assert response.json() == {"lines": {}, "total": 0}
+    assert response.json() == {"lines": [], "total": 0}
 
 def test_get_cart_with_a_product():
     cart.add(Product("product_id", "pair of jeans", 3000))
