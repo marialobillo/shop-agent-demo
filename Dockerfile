@@ -20,6 +20,7 @@ RUN uv sync --locked --no-dev --no-install-project
 
 # 3) Ahora el código, ya con el dueño correcto (evita un chown aparte)
 COPY --chown=appuser:appgroup src/ ./src/
+COPY pyproject.toml uv.lock README.md ./
 
 # 4) Instalar el proyecto en sí (tienda) sobre las deps ya cacheadas
 RUN uv sync --locked --no-dev --no-editable
