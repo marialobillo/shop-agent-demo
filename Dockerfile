@@ -30,4 +30,5 @@ USER appuser
 EXPOSE 8000
 
 # uv run ejecuta uvicorn desde el .venv que creó uv sync
-CMD ["uv", "run", "uvicorn", "tienda.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# CMD ["uv", "run", "uvicorn", "tienda.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD [".venv/bin/uvicorn", "tienda.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
