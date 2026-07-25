@@ -1,35 +1,32 @@
 FROM python:3.13-slim
 
-# Crear usuario no root
+# Instalar uv (versión pineada, no :latest, para builds reproducibles)
+COPY --from=ghcr.io/astral-sh/uv:0.9.7 /uv /uvx /bin/
+
+# Crear usuario no-root
 RUN addgroup --system --gid 1001 appgroup && \
     adduser --system --uid 1001 --gid 1001 appuser
 
 WORKDIR /app
 
-# Instalar uv
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
-
-# Variables de entorno
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    UV_SYSTEM_PYTHON=1
+    PYTHONUNBUFFERED=1
 
-# Copiar archivos de proyecto
-COPY pyproject.toml uv.lock* ./
+# 1) Copiar SOLO los ficheros de dependencias primero (cacheo de capas)
+COPY pyproject.toml uv.lock ./
 
-# Instalar dependencias con uv
-RUN uv pip install --no-cache-dir -r pyproject.toml
+# 2) Instalar dependencias según el lock, sin dev, sin instalar aún el proyecto
+RUN uv sync --locked --no-dev --no-install-project
 
-# Copiar el código
-COPY src/ ./src/
+# 3) Ahora el código, ya con el dueño correcto (evita un chown aparte)
+COPY --chown=appuser:appgroup src/ ./src/
 
-# Cambiar ownership al usuario no root
-RUN chown -R appuser:appgroup /app
+# 4) Instalar el proyecto en sí (tienda) sobre las deps ya cacheadas
+RUN uv sync --locked --no-dev --no-editable
 
-# Cambiar al usuario no root
 USER appuser
 
 EXPOSE 8000
 
-# Ruta completa al main.py
-CMD ["uvicorn", "src.tienda.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# uv run ejecuta uvicorn desde el .venv que creó uv sync
+CMD ["uv", "run", "uvicorn", "tienda.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
