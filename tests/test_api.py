@@ -1,6 +1,12 @@
 from fastapi.testclient import TestClient
+import pytest
 from tienda.api.main import app, cart
 from tienda.domain.product import Product
+
+@pytest.fixture(autouse=True)
+def clean_cart():
+    cart.clear()
+    yield
 
 client = TestClient(app)
 
@@ -20,3 +26,14 @@ def test_get_cart_with_a_product():
         ],
         "total": 3000,
     }
+
+def test_add_product_via_post():
+    response = client.post(
+         "/cart/items",
+        json={"product_id": "product_id", "name": "pair of jeans", "price": 3000},
+    )
+
+    assert response.status_code == 201
+
+    cart_response = client.get("/cart")
+    assert cart_response.json()["total"] == 3000

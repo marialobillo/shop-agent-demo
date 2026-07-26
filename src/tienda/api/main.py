@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 
-from tienda.api.schemas import CartLineOut, CartOut
+from tienda.api.schemas import CartLineOut, CartOut, ProductIn
 from tienda.domain.cart import Cart
+from tienda.domain.product import Product
 
 
 app = FastAPI(title="Shop with python and TDD")
@@ -22,3 +23,8 @@ def get_cart() -> CartOut:
         for line in cart.lines.values()
     ]
     return CartOut(lines=lines, total=cart.total)    
+
+@app.post("/cart/items", status_code=201)
+def get_items(product_in: ProductIn):
+    product = Product(product_in.product_id, product_in.name, product_in.price)
+    cart.add(product)

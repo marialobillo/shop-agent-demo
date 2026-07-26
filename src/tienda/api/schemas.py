@@ -1,5 +1,3 @@
-
-
 from pydantic import BaseModel
 
 
@@ -13,3 +11,8 @@ class CartLineOut(BaseModel):
 class CartOut(BaseModel):
     lines: list[CartLineOut]
     total: int
+
+class ProductIn(BaseModel):
+    product_id: str
+    name: str
+    price: int
