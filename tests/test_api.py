@@ -1,22 +1,35 @@
 from fastapi.testclient import TestClient
 import pytest
-from tienda.api.main import app, cart
+from tienda.api.main import app, get_cart_repository
 from tienda.domain.product import Product
+from tienda.infrastructure.in_memory_cart_repository import InMemoryCartRepository
+
+client = TestClient(app)
 
 @pytest.fixture(autouse=True)
 def clean_cart():
-    cart.clear()
+    repo = InMemoryCartRepository()
+    app.dependency_overrides[get_cart_repository] = lambda: repo
     yield
+    app.dependency_overrides.clear
 
 client = TestClient(app)
+
+@pytest.fixture(autouse=True)
+def fresh_repository():                                             
+    repo = InMemoryCartRepository()
+    app.dependency_overrides[get_cart_repository] = lambda: repo
+    yield repo                                                     
+    app.dependency_overrides.clear()  
+
 
 def test_get_empty_cart():
     response = client.get("/cart")
     assert response.status_code == 200
     assert response.json() == {"lines": [], "total": 0}
 
-def test_get_cart_with_a_product():
-    cart.add(Product("product_id", "pair of jeans", 3000))
+def test_get_cart_with_a_product(fresh_repository):
+    fresh_repository.get().add(Product("product_id", "pair of jeans", 3000))
     response = client.get("/cart")
 
     assert response.status_code == 200

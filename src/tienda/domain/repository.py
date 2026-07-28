@@ -1,0 +1,6 @@
+from typing import Protocol
+from tienda.domain.cart import Cart
+
+class CartRepository(Protocol):
+    def get(self) -> Cart: ...
+    def save(self, cart: Cart) -> None: ...
