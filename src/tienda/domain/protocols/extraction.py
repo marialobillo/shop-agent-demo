@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Protocol
 
-from tienda.domain.product import Product
+from tienda.domain.entities.product import Product
 
 
 @dataclass
