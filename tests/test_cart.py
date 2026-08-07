@@ -2,9 +2,9 @@
 from fastapi.testclient import TestClient
 import pytest
 
-from tienda.domain.cart import Cart
+from tienda.domain.entities.cart import Cart
 from tienda.domain.exceptions import ProductNotFound
-from tienda.domain.product import Product
+from tienda.domain.entities.product import Product
 
 
 def test_new_cart_is_total_zero():

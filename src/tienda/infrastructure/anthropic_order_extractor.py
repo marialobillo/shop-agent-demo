@@ -1,7 +1,7 @@
 from anthropic import Anthropic
 
-from tienda.domain.extraction import ExtractedLine
-from tienda.domain.product import Product
+from tienda.domain.protocols.extraction import ExtractedLine
+from tienda.domain.entities.product import Product
 
 _TOOL_NAME = "extract_order_lines"
 

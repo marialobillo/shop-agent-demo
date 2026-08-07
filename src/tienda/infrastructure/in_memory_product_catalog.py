@@ -1,6 +1,6 @@
-from tienda.domain.catalog import ProductCatalog
+from tienda.domain.protocols.catalog import ProductCatalog
 from tienda.domain.exceptions import InsufficientStock, ProductNotFound
-from tienda.domain.product import Product
+from tienda.domain.entities.product import Product
 
 
 class InMemoryProductCatalog(ProductCatalog):

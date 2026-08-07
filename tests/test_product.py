@@ -1,6 +1,6 @@
 import pytest
 
-from tienda.domain.product import Product
+from tienda.domain.entities.product import Product
 
 
 

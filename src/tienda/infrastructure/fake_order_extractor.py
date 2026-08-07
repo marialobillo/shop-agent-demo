@@ -1,5 +1,5 @@
-from tienda.domain.extraction import ExtractedLine, OrderExtractor
-from tienda.domain.product import Product
+from tienda.domain.protocols.extraction import ExtractedLine, OrderExtractor
+from tienda.domain.entities.product import Product
 
 
 class FakeOrderExtractor(OrderExtractor):

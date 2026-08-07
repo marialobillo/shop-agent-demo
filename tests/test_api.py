@@ -1,8 +1,8 @@
 from fastapi.testclient import TestClient
 import pytest
 from tienda.api.main import app, get_cart_repository, get_order_extractor, get_product_catalog
-from tienda.domain.extraction import ExtractedLine
-from tienda.domain.product import Product
+from tienda.domain.protocols.extraction import ExtractedLine
+from tienda.domain.entities.product import Product
 from tienda.infrastructure.fake_order_extractor import FakeOrderExtractor
 from tienda.infrastructure.in_memory_cart_repository import InMemoryCartRepository
 from tienda.infrastructure.in_memory_product_catalog import InMemoryProductCatalog
