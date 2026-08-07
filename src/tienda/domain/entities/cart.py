@@ -1,6 +1,6 @@
 from tienda.domain.cartline import CartLine
 from tienda.domain.exceptions import ProductNotFound
-from tienda.domain.product import Product
+from tienda.domain.entities.product import Product
 
 
 class Cart:
