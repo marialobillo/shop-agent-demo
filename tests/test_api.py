@@ -16,6 +16,18 @@ def fresh_repository():
     yield repo
     app.dependency_overrides.clear()
 
+def test_get_cart_line_by_productId(fresh_repository):
+    client.post("/cart/items", json={"product_id": "product_id", "name": "pair of jeans", "price": 3000})
+    response = client.get("/cart/items/product_id")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "product_id": "product_id",
+        "name": "pair of jeans",
+        "price": 3000,
+        "quantity": 1,
+        "subtotal": 3000,
+    }
 
 def test_get_empty_cart():
     response = client.get("/cart")

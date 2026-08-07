@@ -1,6 +1,7 @@
 from tienda.api.schemas import CartLineOut, CartOut, SuggestedLineOut, SuggestedOrderOut
-from tienda.domain.cart import Cart
-from tienda.domain.suggestion import SuggestedLine
+from tienda.domain.cartline import CartLine
+from tienda.domain.entities.cart import Cart
+from tienda.domain.services.suggestion import SuggestedLine
 
 
 def cart_to_out(cart: Cart) -> CartOut:
@@ -33,3 +34,12 @@ def suggested_line_to_out(line: SuggestedLine) -> SuggestedLineOut:
 
 def suggested_order_to_out(lines: list[SuggestedLine]) -> SuggestedOrderOut:
     return SuggestedOrderOut(lines=[suggested_line_to_out(line) for line in lines])
+
+def cart_line_out(cartline: CartLine) -> CartLineOut:
+    return CartLineOut(
+        product_id=cartline.product.product_id,
+        name=cartline.product.name,
+        price=cartline.product.price,
+        quantity=cartline.quantity,
+        subtotal=cartline.subtotal,
+    )

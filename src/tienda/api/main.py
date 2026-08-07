@@ -1,15 +1,15 @@
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from tienda.api.mappers import cart_to_out, suggested_order_to_out
+from tienda.api.mappers import cart_line_out, cart_to_out, suggested_order_to_out
 from tienda.api.schemas import CartOut, ConfirmOrderIn, ErrorOut, ProductIn, SuggestedOrderOut, TextOrderIn
-from tienda.domain.catalog import ProductCatalog
-from tienda.domain.confirmation import ConfirmLine, confirm_lines
+from tienda.domain.protocols.catalog import ProductCatalog
+from tienda.domain.services.confirmation import ConfirmLine, confirm_lines
 from tienda.domain.exceptions import InsufficientStock, ProductNotFound
-from tienda.domain.extraction import OrderExtractor
-from tienda.domain.product import Product
-from tienda.domain.repository import CartRepository
-from tienda.domain.suggestion import suggest_lines
+from tienda.domain.protocols.extraction import OrderExtractor
+from tienda.domain.entities.product import Product
+from tienda.domain.protocols.repository import CartRepository
+from tienda.domain.services.suggestion import suggest_lines
 from tienda.infrastructure.anthropic_order_extractor import AnthropicOrderExtractor
 from tienda.infrastructure.in_memory_cart_repository import InMemoryCartRepository
 from tienda.infrastructure.in_memory_product_catalog import InMemoryProductCatalog
@@ -117,3 +117,12 @@ def confirm_order(
     confirm_lines(lines, cart, catalog)
     repo.save(cart)
     return cart_to_out(cart)
+
+
+@app.get("/cart/items/{product_id}", status_code=200)
+def get_cartline(product_id: str, repo: CartRepository = Depends(get_cart_repository)):
+    cart = repo.get()
+    cartline = cart.lines.get(product_id)
+    if cartline:
+        return cart_line_out(cartline)
+    raise ProductNotFound(product_id)
