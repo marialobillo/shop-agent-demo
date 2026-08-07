@@ -1,20 +1,44 @@
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from tienda.api.mappers import cart_to_out
-from tienda.api.schemas import CartOut, ErrorOut, ProductIn
-from tienda.domain.exceptions import ProductNotFound
+from tienda.api.mappers import cart_to_out, suggested_order_to_out
+from tienda.api.schemas import CartOut, ConfirmOrderIn, ErrorOut, ProductIn, SuggestedOrderOut, TextOrderIn
+from tienda.domain.catalog import ProductCatalog
+from tienda.domain.confirmation import ConfirmLine, confirm_lines
+from tienda.domain.exceptions import InsufficientStock, ProductNotFound
+from tienda.domain.extraction import OrderExtractor
 from tienda.domain.product import Product
 from tienda.domain.repository import CartRepository
+from tienda.domain.suggestion import suggest_lines
+from tienda.infrastructure.anthropic_order_extractor import AnthropicOrderExtractor
 from tienda.infrastructure.in_memory_cart_repository import InMemoryCartRepository
+from tienda.infrastructure.in_memory_product_catalog import InMemoryProductCatalog
+
+# Fixed seed catalog for this change; a real product-admin capability is out of scope.
+_SEED_PRODUCTS = [
+    Product("shirt-blue-m", "Blue Shirt - M", 1500, stock=20),
+    Product("shirt-blue-l", "Blue Shirt - L", 1500, stock=15),
+    Product("shirt-red-m", "Red Shirt - M", 1500, stock=10),
+    Product("jeans-32", "Pair of Jeans - 32", 3000, stock=12),
+    Product("jeans-34", "Pair of Jeans - 34", 3000, stock=8),
+    Product("sneakers-42", "Sneakers - 42", 4500, stock=6),
+]
 
 _repository = InMemoryCartRepository()
+_catalog = InMemoryProductCatalog(_SEED_PRODUCTS)
+_extractor = AnthropicOrderExtractor()
 app = FastAPI(title="Shop with python and TDD")
 
 
 # helpers
 def get_cart_repository() -> CartRepository:
     return _repository
+
+def get_product_catalog() -> ProductCatalog:
+    return _catalog
+
+def get_order_extractor() -> OrderExtractor:
+    return _extractor
 
 
 # Domain errors -> HTTP. Registered once so every route inherits the mapping,
@@ -24,7 +48,16 @@ def handle_product_not_found(request: Request, exc: ProductNotFound) -> JSONResp
     product_id = exc.args[0] if exc.args else "unknown"
     return JSONResponse(
         status_code=404,
-        content={"detail": f"Product {product_id} not found in cart"},
+        content={"detail": f"Product {product_id} not found"},
+    )
+
+
+@app.exception_handler(InsufficientStock)
+def handle_insufficient_stock(request: Request, exc: InsufficientStock) -> JSONResponse:
+    product_id = exc.args[0] if exc.args else "unknown"
+    return JSONResponse(
+        status_code=409,
+        content={"detail": f"Insufficient stock for product {product_id}"},
     )
 
 
@@ -61,5 +94,26 @@ def remove_item(product_id: str, repo: CartRepository = Depends(get_cart_reposit
     if line is None:
         raise ProductNotFound(product_id)
     cart.remove(line.product)
+    repo.save(cart)
+    return cart_to_out(cart)
+
+@app.post("/cart/from-text", status_code=200)
+def suggest_from_text(
+    order_in: TextOrderIn,
+    catalog: ProductCatalog = Depends(get_product_catalog),
+    extractor: OrderExtractor = Depends(get_order_extractor),
+) -> SuggestedOrderOut:
+    suggestions = suggest_lines(order_in.text, extractor, catalog)
+    return suggested_order_to_out(suggestions)
+
+@app.post("/cart/confirm", status_code=200, responses={404: {"model": ErrorOut}, 409: {"model": ErrorOut}})
+def confirm_order(
+    order_in: ConfirmOrderIn,
+    repo: CartRepository = Depends(get_cart_repository),
+    catalog: ProductCatalog = Depends(get_product_catalog),
+) -> CartOut:
+    cart = repo.get()
+    lines = [ConfirmLine(line.product_id, line.quantity) for line in order_in.lines]
+    confirm_lines(lines, cart, catalog)
     repo.save(cart)
     return cart_to_out(cart)
