@@ -1,9 +1,9 @@
 from dataclasses import dataclass
 from typing import Literal
 
-from tienda.domain.catalog import ProductCatalog
-from tienda.domain.extraction import OrderExtractor
-from tienda.domain.product import Product
+from tienda.domain.protocols.catalog import ProductCatalog
+from tienda.domain.protocols.extraction import OrderExtractor
+from tienda.domain.entities.product import Product
 
 
 @dataclass

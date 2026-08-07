@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
-from tienda.domain.cart import Cart
-from tienda.domain.catalog import ProductCatalog
+from tienda.domain.entities.cart import Cart
+from tienda.domain.protocols.catalog import ProductCatalog
 from tienda.domain.exceptions import InsufficientStock, ProductNotFound
 
 
