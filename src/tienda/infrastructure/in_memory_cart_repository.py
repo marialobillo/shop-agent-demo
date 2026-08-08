@@ -1,5 +1,5 @@
-from tienda.domain.cart import Cart
-from tienda.domain.repository import CartRepository
+from tienda.domain.entities.cart import Cart
+from tienda.domain.protocols.repository import CartRepository
 
 
 class InMemoryCartRepository(CartRepository):

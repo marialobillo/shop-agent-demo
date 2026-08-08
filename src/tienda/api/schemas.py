@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import BaseModel
 
 
@@ -21,3 +23,25 @@ class ProductIn(BaseModel):
 
 class ErrorOut(BaseModel):
     detail: str
+
+class TextOrderIn(BaseModel):
+    text: str
+
+class SuggestedLineOut(BaseModel):
+    status: Literal["pending", "unmatched"]
+    source_text: str
+    quantity: int
+    product_id: str | None = None
+    name: str | None = None
+    price: int | None = None
+    subtotal: int | None = None
+
+class SuggestedOrderOut(BaseModel):
+    lines: list[SuggestedLineOut]
+
+class ConfirmLineIn(BaseModel):
+    product_id: str
+    quantity: int
+
+class ConfirmOrderIn(BaseModel):
+    lines: list[ConfirmLineIn]

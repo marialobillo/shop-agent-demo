@@ -5,6 +5,7 @@ class Product:
     product_id: str
     name: str
     price: int
+    stock: int = 0
 
     def __post_init__(self):
         if self.price < 0:

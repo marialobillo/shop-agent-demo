@@ -1,8 +1,11 @@
 from fastapi.testclient import TestClient
 import pytest
-from tienda.api.main import app, get_cart_repository
-from tienda.domain.product import Product
+from tienda.api.main import app, get_cart_repository, get_order_extractor, get_product_catalog
+from tienda.domain.protocols.extraction import ExtractedLine
+from tienda.domain.entities.product import Product
+from tienda.infrastructure.fake_order_extractor import FakeOrderExtractor
 from tienda.infrastructure.in_memory_cart_repository import InMemoryCartRepository
+from tienda.infrastructure.in_memory_product_catalog import InMemoryProductCatalog
 
 client = TestClient(app)
 
@@ -13,6 +16,18 @@ def fresh_repository():
     yield repo
     app.dependency_overrides.clear()
 
+def test_get_cart_line_by_productId(fresh_repository):
+    client.post("/cart/items", json={"product_id": "product_id", "name": "pair of jeans", "price": 3000})
+    response = client.get("/cart/items/product_id")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "product_id": "product_id",
+        "name": "pair of jeans",
+        "price": 3000,
+        "quantity": 1,
+        "subtotal": 3000,
+    }
 
 def test_get_empty_cart():
     response = client.get("/cart")
@@ -167,3 +182,105 @@ def test_add_same_product_twice_keeps_one_line():
         ],
         "total": 6000,
     }
+
+
+def test_from_text_returns_pending_line_for_a_known_product(fresh_repository):
+    jeans = Product("jeans", "pair of jeans", 3000, stock=5)
+    catalog = InMemoryProductCatalog([jeans])
+    extractor = FakeOrderExtractor({"a pair of jeans": [ExtractedLine("a pair of jeans", 1, "jeans")]})
+    app.dependency_overrides[get_product_catalog] = lambda: catalog
+    app.dependency_overrides[get_order_extractor] = lambda: extractor
+
+    response = client.post("/cart/from-text", json={"text": "a pair of jeans"})
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "lines": [
+            {
+                "status": "pending",
+                "source_text": "a pair of jeans",
+                "quantity": 1,
+                "product_id": "jeans",
+                "name": "pair of jeans",
+                "price": 3000,
+                "subtotal": 3000,
+            }
+        ]
+    }
+
+
+def test_from_text_returns_unmatched_line_for_unknown_text(fresh_repository):
+    catalog = InMemoryProductCatalog([])
+    extractor = FakeOrderExtractor({"a unicorn": [ExtractedLine("a unicorn", 1, None)]})
+    app.dependency_overrides[get_product_catalog] = lambda: catalog
+    app.dependency_overrides[get_order_extractor] = lambda: extractor
+
+    response = client.post("/cart/from-text", json={"text": "a unicorn"})
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "lines": [
+            {
+                "status": "unmatched",
+                "source_text": "a unicorn",
+                "quantity": 1,
+                "product_id": None,
+                "name": None,
+                "price": None,
+                "subtotal": None,
+            }
+        ]
+    }
+
+
+def test_from_text_does_not_change_the_cart(fresh_repository):
+    jeans = Product("jeans", "pair of jeans", 3000, stock=5)
+    catalog = InMemoryProductCatalog([jeans])
+    extractor = FakeOrderExtractor({"a pair of jeans": [ExtractedLine("a pair of jeans", 1, "jeans")]})
+    app.dependency_overrides[get_product_catalog] = lambda: catalog
+    app.dependency_overrides[get_order_extractor] = lambda: extractor
+
+    client.post("/cart/from-text", json={"text": "a pair of jeans"})
+
+    assert client.get("/cart").json() == {"lines": [], "total": 0}
+
+
+def test_confirm_adds_lines_to_the_cart_and_reduces_stock(fresh_repository):
+    jeans = Product("jeans", "pair of jeans", 3000, stock=5)
+    catalog = InMemoryProductCatalog([jeans])
+    app.dependency_overrides[get_product_catalog] = lambda: catalog
+
+    response = client.post("/cart/confirm", json={"lines": [{"product_id": "jeans", "quantity": 2}]})
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "lines": [
+            {"product_id": "jeans", "name": "pair of jeans", "price": 3000, "quantity": 2, "subtotal": 6000}
+        ],
+        "total": 6000,
+    }
+    assert catalog.get("jeans").stock == 3
+
+
+def test_confirm_with_insufficient_stock_rejects_and_leaves_cart_unchanged(fresh_repository):
+    jeans = Product("jeans", "pair of jeans", 3000, stock=1)
+    catalog = InMemoryProductCatalog([jeans])
+    app.dependency_overrides[get_product_catalog] = lambda: catalog
+
+    response = client.post("/cart/confirm", json={"lines": [{"product_id": "jeans", "quantity": 2}]})
+
+    assert response.status_code == 409
+    assert "jeans" in response.json()["detail"]
+    assert client.get("/cart").json() == {"lines": [], "total": 0}
+    assert catalog.get("jeans").stock == 1
+
+
+def test_confirm_with_unknown_product_returns_404_and_leaves_cart_unchanged(fresh_repository):
+    catalog = InMemoryProductCatalog([])
+    app.dependency_overrides[get_product_catalog] = lambda: catalog
+
+    response = client.post("/cart/confirm", json={"lines": [{"product_id": "unknown", "quantity": 1}]})
+
+    assert response.status_code == 404
+    assert "unknown" in response.json()["detail"]
+    assert client.get("/cart").json() == {"lines": [], "total": 0}

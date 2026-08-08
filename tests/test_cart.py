@@ -2,9 +2,9 @@
 from fastapi.testclient import TestClient
 import pytest
 
-from tienda.domain.cart import Cart
+from tienda.domain.entities.cart import Cart
 from tienda.domain.exceptions import ProductNotFound
-from tienda.domain.product import Product
+from tienda.domain.entities.product import Product
 
 
 def test_new_cart_is_total_zero():
@@ -82,3 +82,21 @@ def test_add_two_diff_products():
 
     assert cart.total == 5000
     assert len(cart.lines) == 2
+
+def test_add_with_quantity_adds_that_many_units_at_once():
+    cart = Cart()
+    new_product = Product("product_id", "pair of jeans", 3000)
+
+    cart.add(new_product, quantity=3)
+
+    assert cart.lines["product_id"].quantity == 3
+    assert cart.total == 9000
+
+def test_add_with_quantity_accumulates_on_an_existing_line():
+    cart = Cart()
+    new_product = Product("product_id", "pair of jeans", 3000)
+
+    cart.add(new_product)
+    cart.add(new_product, quantity=2)
+
+    assert cart.lines["product_id"].quantity == 3

@@ -1,6 +1,6 @@
 from tienda.domain.cartline import CartLine
 from tienda.domain.exceptions import ProductNotFound
-from tienda.domain.product import Product
+from tienda.domain.entities.product import Product
 
 
 class Cart:
@@ -11,11 +11,11 @@ class Cart:
     def total(self) -> int:
         return sum(line.subtotal for line in self.lines.values())
 
-    def add(self, product: Product):
+    def add(self, product: Product, quantity: int = 1):
         if product.product_id in self.lines:
-            self.lines[product.product_id].quantity += 1
+            self.lines[product.product_id].quantity += quantity
         else:
-            line = CartLine(product, 1)   
+            line = CartLine(product, quantity)
             self.lines[product.product_id] = line
         
     def remove(self,product: Product):

@@ -1,5 +1,5 @@
 from typing import Protocol
-from tienda.domain.cart import Cart
+from tienda.domain.entities.cart import Cart
 
 class CartRepository(Protocol):
     def get(self) -> Cart: ...

@@ -1,0 +1,9 @@
+from typing import Protocol
+
+from tienda.domain.entities.product import Product
+
+
+class ProductCatalog(Protocol):
+    def list_products(self) -> list[Product]: ...
+    def get(self, product_id: str) -> Product | None: ...
+    def commit(self, product_id: str, quantity: int) -> None: ...
