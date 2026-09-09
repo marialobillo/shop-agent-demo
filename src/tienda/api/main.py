@@ -10,7 +10,7 @@ from tienda.domain.protocols.extraction import OrderExtractor
 from tienda.domain.entities.product import Product
 from tienda.domain.protocols.repository import CartRepository
 from tienda.domain.services.suggestion import suggest_lines
-from tienda.infrastructure.anthropic_order_extractor import AnthropicOrderExtractor
+from tienda.infrastructure.order_extractors.anthropic_order_extractor import AnthropicOrderExtractor
 from tienda.infrastructure.in_memory_cart_repository import InMemoryCartRepository
 from tienda.infrastructure.in_memory_product_catalog import InMemoryProductCatalog
 
