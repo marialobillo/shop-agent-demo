@@ -50,6 +50,34 @@ curl -X POST http://localhost:8000/cart/from-text \
   -d '{"text": "I want a blue shirt in size M"}'
 ```
 
+## Trying it out — no API key required
+
+By default the app runs with `FakeOrderExtractor`, a simple deterministic
+matcher (no LLM call, no cost, no setup):
+
+```bash
+uv sync
+uv run uvicorn tienda.api.main:app --reload
+```
+
+Extract order lines from plain text (matches by product name substring
+with the fake extractor):
+
+```bash
+curl -X POST http://localhost:8000/cart/from-text \
+  -H "Content-Type: application/json" \
+  -d '{"text": "I want a blue shirt in size M and a pair of jeans size 32"}'
+```
+
+Confirm the suggested lines into the actual cart:
+
+```bash
+curl -X POST http://localhost:8000/cart/confirm \
+  -H "Content-Type: application/json" \
+  -d '{"lines": [{"product_id": "shirt-blue-m", "quantity": 1}]}'
+```
+
+
 ## Using a real LLM provider
 
 Set `ORDER_EXTRACTOR_PROVIDER` in your environment:
@@ -87,3 +115,4 @@ throughout, so the suite runs offline and free.
 
 FastAPI, Python 3.13, `uv`, pytest, TDD — built change-by-change with
 [OpenSpec](openspec/), see `openspec/changes/` for design docs per feature.
+
