@@ -1,6 +1,10 @@
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
+import os
 
+from tienda.infrastructure.order_extractors.anthropic_order_extractor import AnthropicOrderExtractor
+from tienda.infrastructure.order_extractors.openrouter_order_extractor import OpenRouterOrderExtractor
+from tienda.infrastructure.order_extractors.fake_order_extractor import FakeOrderExtractor
 from tienda.api.mappers import cart_line_out, cart_to_out, suggested_order_to_out
 from tienda.api.schemas import CartOut, ConfirmOrderIn, ErrorOut, ProductIn, SuggestedOrderOut, TextOrderIn
 from tienda.domain.protocols.catalog import ProductCatalog
@@ -10,7 +14,7 @@ from tienda.domain.protocols.extraction import OrderExtractor
 from tienda.domain.entities.product import Product
 from tienda.domain.protocols.repository import CartRepository
 from tienda.domain.services.suggestion import suggest_lines
-from tienda.infrastructure.anthropic_order_extractor import AnthropicOrderExtractor
+from tienda.infrastructure.order_extractors.anthropic_order_extractor import AnthropicOrderExtractor
 from tienda.infrastructure.in_memory_cart_repository import InMemoryCartRepository
 from tienda.infrastructure.in_memory_product_catalog import InMemoryProductCatalog
 
@@ -24,9 +28,24 @@ _SEED_PRODUCTS = [
     Product("sneakers-42", "Sneakers - 42", 4500, stock=6),
 ]
 
+
+def _build_order_extractor() -> OrderExtractor:
+    provider = os.environ.get("ORDER_EXTRACTOR_PROVIDER", "fake")
+    if provider == "anthropic":
+        return AnthropicOrderExtractor()
+    if provider == "openrouter":
+        return OpenRouterOrderExtractor()
+    if provider == "fake":
+        return FakeOrderExtractor()
+    raise ValueError(
+        f"Unknown ORDER_EXTRACTOR_PROVIDER={provider!r}. "
+        "Expected one of: anthropic, openrouter, fake."
+    )
+
 _repository = InMemoryCartRepository()
 _catalog = InMemoryProductCatalog(_SEED_PRODUCTS)
-_extractor = AnthropicOrderExtractor()
+_extractor = _build_order_extractor()
+
 app = FastAPI(title="Shop with python and TDD")
 
 
